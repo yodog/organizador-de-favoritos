@@ -19,10 +19,19 @@ jobs:
         id: build
         run: web-ext build --source-dir=. --artifacts-dir=build --overwrite-dest
 
+      - name: Get generated zip filename
+        id: get_zip_name
+        run: |
+          ZIP_FILE=$(find build -name "*.zip" -print -quit)
+          ZIP_FILENAME=$(basename "$ZIP_FILE")
+          echo "zip_filename=$ZIP_FILENAME" >> $GITHUB_OUTPUT
+
       - name: Listar arquivos gerados
         run: ls -lh build
 
       - name: Upload do artefato .zip
         uses: actions/upload-artifact@v4
         with:
+          name: ${{ steps.get_zip_name.outputs.zip_filename }}
           path: build/*.zip
+          compression-level: 0
