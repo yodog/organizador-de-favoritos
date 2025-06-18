@@ -1,4 +1,4 @@
-name: Empacotar extensão Firefox (.zip)
+name: Empacotar extensao (.zip)
 
 on:
   push:
@@ -9,24 +9,21 @@ jobs:
   build-zip:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout do repositório
+      - name: Checkout do repositorio
         uses: actions/checkout@v4
 
       - name: Instalar web-ext
         run: npm install --global web-ext
 
-      - name: Empacotar extensão como .zip
+      - name: Empacotar extensao como .zip
         id: build
-        run: |
-          web-ext build \
-            --source-dir=. \
-            --artifacts-dir=build \
-            --overwrite-dest
+        run: web-ext build --source-dir=. --artifacts-dir=build --overwrite-dest
+
       - name: Listar arquivos gerados
-        run: ls -l build
+        run: ls -lh build
 
       - name: Upload do artefato .zip
         uses: actions/upload-artifact@v4
         with:
-          name: organizador-firefox-zip
+          name: ${{ github.event.repository.name }}.zip
           path: build/*.zip
