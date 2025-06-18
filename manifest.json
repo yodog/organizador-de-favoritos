@@ -1,23 +1,19 @@
 {
   "manifest_version": 3,
   "name": "Organizador de Favoritos",
-  "version": "2025.06.17.1801",
+  "version": "2025.6.18.1801",
   "description": "Extensao que organiza favoritos removendo duplicatas e ordenando recursivamente",
   "permissions": ["bookmarks", "alarms", "storage"],
 
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
-      "16": "icon.png",
-      "48": "icon.png",
-      "128": "icon.png"
+      "128": "icon-128.png"
     }
   },
 
   "icons": {
-    "16": "icon.png",
-    "48": "icon.png",
-    "128": "icon.png"
+    "128": "icon-128.png"
   },
 
   "background": {
