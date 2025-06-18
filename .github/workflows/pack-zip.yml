@@ -40,3 +40,4 @@ jobs:
         with:
           name: ${{ needs.build-extension.outputs.zip_filename }}
           path: build/*.zip
+          overwrite: true
