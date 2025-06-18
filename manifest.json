@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "Organizador de Favoritos",
+  "version": "2025.06.17.1801",
+  "description": "Extensao que organiza favoritos removendo duplicatas e ordenando recursivamente",
+  "permissions": ["bookmarks", "alarms", "storage"],
+
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon.png",
+      "48": "icon.png",
+      "128": "icon.png"
+    }
+  },
+
+  "icons": {
+    "16": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
+  },
+
+  "background": {
+    "service_worker": "background.js",
+    "scripts": ["background.js"],
+    "type": "module"
+  },
+
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "organizador-de-favoritos@yodog"
+    }
+  }
+}
