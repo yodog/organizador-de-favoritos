@@ -26,8 +26,11 @@ jobs:
           ZIP_FILENAME=$(basename "$ZIP_FILE")
           echo "zip_filename=$ZIP_FILENAME" >> $GITHUB_OUTPUT
 
-      - name: Listar arquivos gerados
-        run: ls -lh build
+      - name: Ler versao do manifest.json
+        id: get_version
+        run: |
+          VERSION=$(jq -r '.version' manifest.json)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       # - name: Disponibilizar como artefato
       #   uses: actions/upload-artifact@v4
@@ -36,7 +39,22 @@ jobs:
       #     path: build/*.zip
       #     overwrite: true
 
-      - name: Disponibilizar como release
-        uses: softprops/action-gh-release@v1
+      # - name: Criar tag automaticamente
+      #   uses: butlerlogic/action-autotag@stable
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     strategy: regex
+      #     file: manifest.json
+      #     regex_pattern: '"version":\\s*"([0-9]+\\.[0-9]+\\.[0-9]+)"'
+
+      # - name: Criar release
+      #   uses: softprops/action-gh-release@v1
+      #   with:
+      #     files: build/*.zip
+      #     tag_name: ${{ steps.get_version.outputs.version }}
+
+      - uses: ncipollo/release-action@v1
         with:
-          files: build/*.zip
+          artifacts: build/*.zip
+          tag: ${{ steps.get_version.outputs.version }}
