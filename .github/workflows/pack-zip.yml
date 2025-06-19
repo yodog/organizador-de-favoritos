@@ -29,9 +29,14 @@ jobs:
       - name: Listar arquivos gerados
         run: ls -lh build
 
-      - name: Upload do artefato .zip
-        uses: actions/upload-artifact@v4
+      # - name: Disponibilizar como artefato
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: ${{ steps.get_zip_name.outputs.zip_filename }}
+      #     path: build/*.zip
+      #     overwrite: true
+
+      - name: Disponibilizar como release
+        uses: softprops/action-gh-release@v1
         with:
-          name: ${{ steps.get_zip_name.outputs.zip_filename }}
-          path: build/*.zip
-          overwrite: true
+          files: build/*.zip
