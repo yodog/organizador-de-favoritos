@@ -6,10 +6,13 @@ on:
       - main
 
 jobs:
-  build-upload-release:
+  build-and-release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    outputs:
+      MANIFEST_ID: ${{ steps.get_version.outputs.MANIFEST_ID }}
+      ZIP_FILENAME: ${{ steps.get_version.outputs.ZIP_FILENAME }}
     steps:
       - name: Checkout do repositorio
         uses: actions/checkout@v4
@@ -33,30 +36,42 @@ jobs:
         run: |
           VERSION=$(jq -r '.version' manifest.json)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
+          MANIFEST_ID=$(jq -r '.browser_specific_settings.gecko.id' manifest.json)
+          echo "MANIFEST_ID=$MANIFEST_ID" >> $GITHUB_OUTPUT
 
-      # - name: Disponibilizar como artefato
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: ${{ steps.get_zip_name.outputs.zip_filename }}
-      #     path: build/*.zip
-      #     overwrite: true
+      - name: Disponibilizar como artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.get_zip_name.outputs.zip_filename }}
+          path: build/*.zip
+          overwrite: true
 
-      # - name: Criar tag automaticamente
-      #   uses: butlerlogic/action-autotag@stable
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     strategy: regex
-      #     file: manifest.json
-      #     regex_pattern: '"version":\\s*"([0-9]+\\.[0-9]+\\.[0-9]+)"'
-
-      # - name: Criar release
-      #   uses: softprops/action-gh-release@v1
-      #   with:
-      #     files: build/*.zip
-      #     tag_name: ${{ steps.get_version.outputs.version }}
-
-      - uses: ncipollo/release-action@v1
+      - name: Disponibilizar como release
+        uses: ncipollo/release-action@v1
         with:
           artifacts: build/*.zip
-          tag: ${{ steps.get_version.outputs.version }}
+          allowUpdates: true
+
+  # publish:
+  #   needs: build-and-release
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Upload to Chrome Web Store
+  #       uses: mobilefirstllc/cws-publish@latest
+  #       with:
+  #         action: "upload"
+  #         client_id: ${{ secrets.CLIENT }}
+  #         client_secret: ${{ secrets.SECRET }}
+  #         refresh_token: ${{ secrets.TOKEN }}
+  #         extension_id: ${{ secrets.EXTENSION_ID }}
+  #         zip_file: build/${{ needs.build-and-release.outputs.ZIP_FILENAME }}
+
+  #     - name: Publicar no Firefox AMO
+  #       uses: browser-actions/release-firefox-addon@latest
+  #       with:
+  #         addon-id: ${{ needs.build-and-release.outputs.MANIFEST_ID }}
+  #         addon-path: build/${{ needs.build-and-release.outputs.ZIP_FILENAME }}
+  #         auth-api-issuer: ${{ secrets.FIREFOX_JWT_ISSUER }}
+  #         auth-api-secret: ${{ secrets.FIREFOX_JWT_SECRET }}
+  #         auth-api-issuer: ${{ secrets.FIREFOX_JWT_ISSUER }}
+  #         auth-api-secret: ${{ secrets.FIREFOX_JWT_SECRET }}
