@@ -51,6 +51,7 @@ jobs:
         with:
           artifacts: build/*.zip
           allowUpdates: true
+          tag: ${{ steps.get_version.outputs.version }}
 
   # publish:
   #   needs: build-and-release
