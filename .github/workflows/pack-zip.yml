@@ -1,42 +1,39 @@
-name: Empacotar extensao (.zip)
+name: Build e Deploy Extensao
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     outputs:
       MANIFEST_ID: ${{ steps.get_version.outputs.MANIFEST_ID }}
-      ZIP_FILENAME: ${{ steps.get_version.outputs.ZIP_FILENAME }}
+      ZIP_FILENAME: ${{ steps.get_zip_name.outputs.zip_filename }}
+      VERSION: ${{ steps.get_version.outputs.version }}
     steps:
-      - name: Checkout do repositorio
+      - name: Checkout do repositório
         uses: actions/checkout@v4
 
       - name: Instalar web-ext
         run: npm install --global web-ext
 
-      - name: Empacotar extensao como .zip
-        id: build
+      - name: Empacotar extensão como .zip
         run: web-ext build --source-dir=. --artifacts-dir=build --overwrite-dest
 
-      - name: Get generated zip filename
+      - name: Obter nome do arquivo .zip gerado
         id: get_zip_name
         run: |
           ZIP_FILE=$(find build -name "*.zip" -print -quit)
           ZIP_FILENAME=$(basename "$ZIP_FILE")
           echo "zip_filename=$ZIP_FILENAME" >> $GITHUB_OUTPUT
 
-      - name: Ler versao do manifest.json
+      - name: Ler versão e ID do manifest.json
         id: get_version
         run: |
           VERSION=$(jq -r '.version' manifest.json)
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
           MANIFEST_ID=$(jq -r '.browser_specific_settings.gecko.id' manifest.json)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "MANIFEST_ID=$MANIFEST_ID" >> $GITHUB_OUTPUT
 
       - name: Disponibilizar como artefato
@@ -46,33 +43,49 @@ jobs:
           path: build/*.zip
           overwrite: true
 
-      - name: Disponibilizar como release
+      - name: Criar ou atualizar release no GitHub
         uses: ncipollo/release-action@v1
         with:
           artifacts: build/*.zip
           allowUpdates: true
           tag: ${{ steps.get_version.outputs.version }}
 
-  # publish:
-  #   needs: build-and-release
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Upload to Chrome Web Store
-  #       uses: mobilefirstllc/cws-publish@latest
-  #       with:
-  #         action: "upload"
-  #         client_id: ${{ secrets.CLIENT }}
-  #         client_secret: ${{ secrets.SECRET }}
-  #         refresh_token: ${{ secrets.TOKEN }}
-  #         extension_id: ${{ secrets.EXTENSION_ID }}
-  #         zip_file: build/${{ needs.build-and-release.outputs.ZIP_FILENAME }}
+  publish-chrome:
+    needs: build-and-release
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: Baixar artefato da extensão
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build-and-release.outputs.ZIP_FILENAME }}
+          path: build
 
-  #     - name: Publicar no Firefox AMO
-  #       uses: browser-actions/release-firefox-addon@latest
-  #       with:
-  #         addon-id: ${{ needs.build-and-release.outputs.MANIFEST_ID }}
-  #         addon-path: build/${{ needs.build-and-release.outputs.ZIP_FILENAME }}
-  #         auth-api-issuer: ${{ secrets.FIREFOX_JWT_ISSUER }}
-  #         auth-api-secret: ${{ secrets.FIREFOX_JWT_SECRET }}
-  #         auth-api-issuer: ${{ secrets.FIREFOX_JWT_ISSUER }}
-  #         auth-api-secret: ${{ secrets.FIREFOX_JWT_SECRET }}
+      - name: Upload para Chrome Web Store
+        uses: mobilefirstllc/cws-publish@latest
+        with:
+          action: "upload"
+          client_id: ${{ secrets.CLIENT }}
+          client_secret: ${{ secrets.SECRET }}
+          refresh_token: ${{ secrets.TOKEN }}
+          extension_id: ${{ secrets.EXTENSION_ID }}
+          zip_file: build/${{ needs.build-and-release.outputs.ZIP_FILENAME }}
+
+  publish-firefox:
+    needs: build-and-release
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: Baixar artefato da extensão
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build-and-release.outputs.ZIP_FILENAME }}
+          path: build
+
+      - name: Publicar no Firefox AMO
+        uses: browser-actions/release-firefox-addon@latest
+        with:
+          addon-id: ${{ needs.build-and-release.outputs.MANIFEST_ID }}
+          addon-path: build/${{ needs.build-and-release.outputs.ZIP_FILENAME }}
+          auth-api-issuer: ${{ secrets.FIREFOX_JWT_ISSUER }}
+          auth-api-secret: ${{ secrets.FIREFOX_JWT_SECRET }}
