@@ -50,42 +50,42 @@ jobs:
           allowUpdates: true
           tag: ${{ steps.get_version.outputs.version }}
 
-  publish-chrome:
-    needs: build-and-release
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-    steps:
-      - name: Baixar artefato da extensão
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ needs.build-and-release.outputs.ZIP_FILENAME }}
-          path: build
+  # publish-chrome:
+  #   needs: build-and-release
+  #   runs-on: ubuntu-latest
+  #   if: github.event_name == 'push'
+  #   steps:
+  #     - name: Baixar artefato da extensão
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: ${{ needs.build-and-release.outputs.ZIP_FILENAME }}
+  #         path: build
 
-      - name: Upload para Chrome Web Store
-        uses: mobilefirstllc/cws-publish@latest
-        with:
-          action: "upload"
-          client_id: ${{ secrets.CLIENT }}
-          client_secret: ${{ secrets.SECRET }}
-          refresh_token: ${{ secrets.TOKEN }}
-          extension_id: ${{ secrets.EXTENSION_ID }}
-          zip_file: build/${{ needs.build-and-release.outputs.ZIP_FILENAME }}
+  #     - name: Upload para Chrome Web Store
+  #       uses: mobilefirstllc/cws-publish@latest
+  #       with:
+  #         action: "upload"
+  #         client_id: ${{ secrets.CHROME_OAUTH_CLIENT_ID }}
+  #         client_secret: ${{ secrets.CHROME_OAUTH_CLIENT_SECRET }}
+  #         refresh_token: ${{ secrets.CHROME_OAUTH_REFRESH_TOKEN }}
+  #         extension_id: ${{ secrets.CHROME_EXTENSION_ID }}
+  #         zip_file: build/${{ needs.build-and-release.outputs.ZIP_FILENAME }}
 
-  publish-firefox:
-    needs: build-and-release
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-    steps:
-      - name: Baixar artefato da extensão
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ needs.build-and-release.outputs.ZIP_FILENAME }}
-          path: build
+  # publish-firefox:
+  #   needs: build-and-release
+  #   runs-on: ubuntu-latest
+  #   if: github.event_name == 'push'
+  #   steps:
+  #     - name: Baixar artefato da extensão
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: ${{ needs.build-and-release.outputs.ZIP_FILENAME }}
+  #         path: build
 
-      - name: Publicar no Firefox AMO
-        uses: browser-actions/release-firefox-addon@latest
-        with:
-          addon-id: ${{ needs.build-and-release.outputs.MANIFEST_ID }}
-          addon-path: build/${{ needs.build-and-release.outputs.ZIP_FILENAME }}
-          auth-api-issuer: ${{ secrets.FIREFOX_JWT_ISSUER }}
-          auth-api-secret: ${{ secrets.FIREFOX_JWT_SECRET }}
+  #     - name: Publicar no Firefox AMO
+  #       uses: browser-actions/release-firefox-addon@latest
+  #       with:
+  #         addon-id: ${{ needs.build-and-release.outputs.MANIFEST_ID }}
+  #         addon-path: build/${{ needs.build-and-release.outputs.ZIP_FILENAME }}
+  #         auth-api-issuer: ${{ secrets.FIREFOX_JWT_ISSUER }}
+  #         auth-api-secret: ${{ secrets.FIREFOX_JWT_SECRET }}
